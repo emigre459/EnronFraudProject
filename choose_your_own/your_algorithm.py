@@ -35,26 +35,27 @@ from time import time
 model_type = None
 
 #k-NN
+'''
 model_type = "k-NN"
 from sklearn.neighbors import KNeighborsClassifier
 
-clf = KNeighborsClassifier(n_neighbors=5, weights='uniform', algorithm='auto', leaf_size=30)
-
+clf = KNeighborsClassifier(n_neighbors=20, weights='distance', algorithm='auto', leaf_size=30)
+'''
 
 #Random Forest
 '''
 model_type = "Random Forest"
 from sklearn.ensemble import RandomForestClassifier
 
-clf = RandomForestClassifier(n_estimators = 10, max_depth=None, min_samples_split=2, min_samples_leaf=1, min_weight_fraction_leaf = 0.0, max_features='auto', max_leaf_nodes=None, min_impurity_decrease=0.0, min_impurity_split=None)
+clf = RandomForestClassifier(n_estimators = 10, max_depth=None, min_samples_split=10, min_samples_leaf=1, min_weight_fraction_leaf = 0.0, max_features='auto', max_leaf_nodes=None, min_impurity_decrease=0.0, min_impurity_split=None)
 '''
 
 #AdaBoost
-'''
+
 model_type = "AdaBoost"
 from sklearn.ensemble import AdaBoostClassifier
-clf = AdaBoostClassifier(n_estimators=50, learning_rate=1.0)
-'''
+clf = AdaBoostClassifier(n_estimators=10, learning_rate=0.1)
+
 
 
 ##############
@@ -71,6 +72,8 @@ print "Testing time for", model_type, ":", round(time()-t0, 3), "s"
 from sklearn.metrics import accuracy_score
 acc = accuracy_score(labels_test, preds)
 print "Accuracy =", acc
+
+print "Don't forget to save the Trial filename!!"
 
 
 try:
