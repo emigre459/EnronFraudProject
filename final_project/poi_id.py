@@ -10,6 +10,8 @@ from tester import dump_classifier_and_data
 ### Task 1: Select what features you'll use.
 ### features_list is a list of strings, each of which is a feature name.
 ### The first feature must be "poi".
+	'''Since I'm using univariate selection to dictate the features I'll use later, here I'm just pulling in the features that I found to not have a large fraction of missing values (and I'm also going to ignore 'email_address' which didn't provide any useful)'''
+
 features_list = ['poi','salary'] # You will need to use more features
 
 ### Load the dictionary containing the dataset
@@ -17,15 +19,23 @@ with open("final_project_dataset.pkl", "r") as data_file:
     data_dict = pickle.load(data_file)
 
 ### Task 2: Remove outliers
+	# Can I just remove outliers I know exist due to work in Jupyter notebook or do I need to do EDA in-file?
+
+
 ### Task 3: Create new feature(s)
+	# If they require data to be pushed into a file, I don't think my quantile thing can just be pushed into a Pipeline, but rather has to be done first...imputation too, I suppose.
+
+
 ### Store to my_dataset for easy export below.
+	# How to export back into dict format so it can export properly?
+	# DataFrame.to_dict(orient = 'index') will do the trick!
 my_dataset = data_dict
 
 ### Extract features and labels from dataset for local testing
 data = featureFormat(my_dataset, features_list, sort_keys = True)
 labels, features = targetFeatureSplit(data)
 
-### Task 4: Try a varity of classifiers
+### Task 4: Try a variety of classifiers
 ### Please name your classifier clf for easy export below.
 ### Note that if you want to do PCA or other multi-stage operations,
 ### you'll need to use Pipelines. For more info:
