@@ -10,6 +10,7 @@
 9. [Minkowski distance](https://en.wikipedia.org/wiki/Minkowski_distance)
 10. [Julie Michelman - Pandas, Pipelines, and Custom Transformers](https://www.slideshare.net/PyData/julie-michelman-pandas-pipelines-and-custom-transformers/27)
 11. [Using Pipelines and FeatureUnions in scikit-learn](http://michelleful.github.io/code-blog/2015/06/20/pipelines/)
+12. [Cross Validation Pipeline](https://chrisalbon.com/machine_learning/model_evaluation/cross_validation_pipeline/)
 
 
 I hereby confirm that this submission is my work. I have cited above the origins of any parts of the submission that were taken from Websites, books, forums, blog posts, github repositories, etc.

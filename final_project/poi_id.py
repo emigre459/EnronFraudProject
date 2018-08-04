@@ -10,9 +10,26 @@ from tester import dump_classifier_and_data
 ### Task 1: Select what features you'll use.
 ### features_list is a list of strings, each of which is a feature name.
 ### The first feature must be "poi".
-	'''Since I'm using univariate selection to dictate the features I'll use later, here I'm just pulling in the features that I found to not have a large fraction of missing values (and I'm also going to ignore 'email_address' which didn't provide any useful)'''
 
-features_list = ['poi','salary'] # You will need to use more features
+'''
+We'll grab all of the features except the ones we know are more than 50% missing values
+Specifically, we're not going to pull in:
+    1. loan_advances (97% missing)
+    2. director_fees (88%)
+    3. restricted_stock_deferred (87.7%)
+    4. deferral_payments (73%)
+    5. deferred_income (66%)
+    6. long_term_incentive (54.9%)
+    
+Also, we won't pull in email_address as that doesn't give us any useful info
+'''
+features_list = ['poi', 'salary', 'total_payments', 'bonus', 
+                 'total_stock_value', 
+                 'expenses', 'exercised_stock_options', 'other',
+                 'restricted_stock', 
+                 'to_messages', 'from_poi_to_this_person', 
+                 'from_messages', 'from_this_person_to_poi', 
+                 'shared_receipt_with_poi'] 
 
 ### Load the dictionary containing the dataset
 with open("final_project_dataset.pkl", "r") as data_file:
