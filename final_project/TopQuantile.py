@@ -66,7 +66,12 @@ class TopQuantile(BaseEstimator, TransformerMixin):
             self.quants = pos
         
         #Are features a NumPy array?
-        elif isinstance(X, np.ndarray):
+        elif isinstance(X, np.ndarray) or isinstance(X, list):
+            if isinstance(X, list):
+                #Need to be working with a numpy array for this to go
+                #as expected
+                X = np.array(X)
+
             #Is self.feature_list something other than a list of int?
             if not isinstance(self.feature_list[0], int):
                 raise TypeError('feature_list is not a list of integers')
@@ -119,7 +124,12 @@ class TopQuantile(BaseEstimator, TransformerMixin):
             X[self.new_feature_name] = self.boolean.sum(axis = 1)
             
             
-        elif isinstance(X, np.ndarray):
+        elif isinstance(X, np.ndarray) or isinstance(X, list):
+            if isinstance(X, list):
+                #Need to be working with a numpy array for this to go
+                #as expected
+                X = np.array(X)
+                
             self.boolean = np.absolute(X[:,self.feature_list]) >= np.absolute(self.quants)            
             X = np.vstack((X.T, np.sum(self.boolean, axis = 1))).T
             

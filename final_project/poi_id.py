@@ -50,6 +50,15 @@ we know that we need to drop the records 'TOTAL' and
 '''
 df.drop(['TOTAL', 'THE TRAVEL AGENCY IN THE PARK'], inplace = True)
 
+#Here I'll also perform imputation to set all of the NaN values to 
+#their feature-specific median
+from sklearn.preprocessing import Imputer
+
+imp = Imputer(missing_values='NaN', strategy='median')
+#Need to get rid of emails first, can't impute those!
+df.drop(columns = ['email_address'], inplace = True)
+df.loc[:,:] = imp.fit_transform(df)
+
 ### Task 3: Create new feature(s)
 	#I've included feature engineering as part of my Pipeline, please
 		#see below for the Pipeline that includes it
@@ -64,7 +73,7 @@ data_dict = df.to_dict(orient = 'index')
 my_dataset = data_dict
 
 ### Extract features and labels from dataset for local testing
-data = featureFormat(my_dataset, features_list, sort_keys = True, remove_NaN = False)
+data = featureFormat(my_dataset, features_list, sort_keys = True)
 labels, features = targetFeatureSplit(data)
 
 ### Task 4: Try a variety of classifiers
@@ -81,7 +90,7 @@ labels, features = targetFeatureSplit(data)
 ### using our testing script. 
 
 from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import Imputer, RobustScaler
+from sklearn.preprocessing import  RobustScaler
 from sklearn.model_selection import StratifiedShuffleSplit
 from sklearn.feature_selection import SelectPercentile, f_classif
 from sklearn.neighbors import KNeighborsClassifier
@@ -91,6 +100,8 @@ import numpy as np
 #but as a numpy array
 features = np.array(features)
 labels = np.array(labels)
+
+print features[2,:]
 
 
 #Suppress the warnings coming from GridSearchCV to reduce output messages
@@ -103,7 +114,7 @@ warnings.filterwarnings("ignore",category=sklearn.exceptions.UndefinedMetricWarn
 cv_100 = StratifiedShuffleSplit(n_splits=100, test_size=0.1, random_state = 42)
 
 #Imputation using the median of each feature
-imp = Imputer(missing_values='NaN', strategy='median')
+#imp = Imputer(missing_values='NaN', strategy='median')
 
 #Feature Engineering with TopQuantile() to count the top quantile financial 
 	#features
@@ -125,7 +136,7 @@ knn_param_grid = {'kNN__n_neighbors': range(1,21,1),
 #Hyperparameter tuning
 from sklearn.model_selection import GridSearchCV
 
-knn_pipe = Pipeline([('impute', imp), ('engineer',topQ), ('scale', scaler),
+knn_pipe = Pipeline([('engineer',topQ), ('scale', scaler),
                     ('select', selector), ('kNN', knn)])
 
 knn_gs = GridSearchCV(knn_pipe, knn_param_grid, scoring = ['precision', 'recall', 'f1'], 
@@ -135,10 +146,9 @@ knn_gs.fit(features, labels)
 
 
 results_df_knn = pd.DataFrame(knn_gs.cv_results_)
-print results_df_knn.loc[knn_gs.best_index_]
+print "kNN:\n\n", results_df_knn.loc[knn_gs.best_index_]
 
 clf = knn_gs.best_estimator_
-
 
 ### Task 6: Dump your classifier, dataset, and features_list so anyone can
 ### check your results. You do not need to change anything below, but make sure
