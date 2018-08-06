@@ -43,16 +43,19 @@ df = pd.DataFrame.from_dict(data_dict, orient = 'index')
 
 
 ### Task 2: Remove outliers
-	'''
-	Based upon the exploration we did in the Jupyter notebook included,
-	we know that we need to drop the records 'TOTAL' and 
-	'THE TRAVEL AGENCY IN THE PARK'.
-	'''
+'''
+Based upon the exploration we did in the Jupyter notebook included,
+we know that we need to drop the records 'TOTAL' and 
+'THE TRAVEL AGENCY IN THE PARK'.
+'''
 df.drop(['TOTAL', 'THE TRAVEL AGENCY IN THE PARK'], inplace = True)
 
 ### Task 3: Create new feature(s)
 	#I've included feature engineering as part of my Pipeline, please
 		#see below for the Pipeline that includes it
+	#Here I'll simply create the feature engineering class
+
+from TopQuantile import TopQuantile
 
 
 ### Store to my_dataset for easy export below.
@@ -61,7 +64,7 @@ data_dict = df.to_dict(orient = 'index')
 my_dataset = data_dict
 
 ### Extract features and labels from dataset for local testing
-data = featureFormat(my_dataset, features_list, sort_keys = True)
+data = featureFormat(my_dataset, features_list, sort_keys = True, remove_NaN = False)
 labels, features = targetFeatureSplit(data)
 
 ### Task 4: Try a variety of classifiers
@@ -84,6 +87,12 @@ from sklearn.feature_selection import SelectPercentile, f_classif
 from sklearn.neighbors import KNeighborsClassifier
 import numpy as np
 
+#It will be easier to work with these data not as a list,
+#but as a numpy array
+features = np.array(features)
+labels = np.array(labels)
+
+
 #Suppress the warnings coming from GridSearchCV to reduce output messages
 import warnings
 import sklearn.exceptions
@@ -98,15 +107,9 @@ imp = Imputer(missing_values='NaN', strategy='median')
 
 #Feature Engineering with TopQuantile() to count the top quantile financial 
 	#features
-feats = ['salary', 'total_payments', 'bonus', 'total_stock_value', 'expenses', 
-         'exercised_stock_options', 'other', 'restricted_stock']
+feats = [0,1,2,3,4,5,6,7]
 
-#Since numpy needs the columns as integer positions instead of names...
-feats_loc_list = []
-for e in feats:
-    feats_loc_list.append(features.columns.get_loc(e))
-
-topQ = TopQuantile(feature_list = feats_loc_list)
+topQ = TopQuantile(feature_list = feats)
 
 #Feature Scaling via RobustScaler()
 scaler = RobustScaler()
@@ -120,13 +123,14 @@ knn_param_grid = {'kNN__n_neighbors': range(1,21,1),
 'kNN__weights': ['uniform', 'distance'], 'kNN__p': [1,2]}
 
 #Hyperparameter tuning
-#Apparently you're supposed to put the pipe in as a param for GridSearchCV, not the other way around...
+from sklearn.model_selection import GridSearchCV
 
 knn_pipe = Pipeline([('impute', imp), ('engineer',topQ), ('scale', scaler),
                     ('select', selector), ('kNN', knn)])
 
 knn_gs = GridSearchCV(knn_pipe, knn_param_grid, scoring = ['precision', 'recall', 'f1'], 
                       cv = cv_100, refit = 'f1', return_train_score = False)
+
 knn_gs.fit(features, labels)
 
 
