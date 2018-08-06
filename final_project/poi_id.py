@@ -12,7 +12,9 @@ from tester import dump_classifier_and_data
 ### The first feature must be "poi".
 
 '''
-We'll grab all of the features except the ones we know are more than 50% missing values
+We'll grab all of the features except the ones we know are more than 50%
+missing values
+
 Specifically, we're not going to pull in:
     1. loan_advances (97% missing)
     2. director_fees (88%)
@@ -35,17 +37,27 @@ features_list = ['poi', 'salary', 'total_payments', 'bonus',
 with open("final_project_dataset.pkl", "r") as data_file:
     data_dict = pickle.load(data_file)
 
-### Task 2: Remove outliers
-	# Can I just remove outliers I know exist due to work in Jupyter notebook or do I need to do EDA in-file?
+#Translating data_dict to a pandas DataFrame for ease of use
+import pandas as pd
+df = pd.DataFrame.from_dict(data_dict, orient = 'index')
 
+
+### Task 2: Remove outliers
+	'''
+	Based upon the exploration we did in the Jupyter notebook included,
+	we know that we need to drop the records 'TOTAL' and 
+	'THE TRAVEL AGENCY IN THE PARK'.
+	'''
+df.drop(['TOTAL', 'THE TRAVEL AGENCY IN THE PARK'], inplace = True)
 
 ### Task 3: Create new feature(s)
-	# If they require data to be pushed into a file, I don't think my quantile thing can just be pushed into a Pipeline, but rather has to be done first...imputation too, I suppose.
+	#I've included feature engineering as part of my Pipeline, please
+		#see below for the Pipeline that includes it
 
 
 ### Store to my_dataset for easy export below.
-	# How to export back into dict format so it can export properly?
-	# DataFrame.to_dict(orient = 'index') will do the trick!
+#I need to translate my data back into a dict for this step
+data_dict = df.to_dict(orient = 'index')
 my_dataset = data_dict
 
 ### Extract features and labels from dataset for local testing
@@ -58,21 +70,71 @@ labels, features = targetFeatureSplit(data)
 ### you'll need to use Pipelines. For more info:
 ### http://scikit-learn.org/stable/modules/pipeline.html
 
-# Provided to give you a starting point. Try a variety of classifiers.
-from sklearn.naive_bayes import GaussianNB
-clf = GaussianNB()
+#I'm only going to build the Pipeline using a k-Nearest Neigbhors
+	#classifier built from GridSearchCV(), as I already explored
+	#models in my Jupyter notebook, please see that for more info.
 
 ### Task 5: Tune your classifier to achieve better than .3 precision and recall 
-### using our testing script. Check the tester.py script in the final project
-### folder for details on the evaluation method, especially the test_classifier
-### function. Because of the small size of the dataset, the script uses
-### stratified shuffle split cross validation. For more info: 
-### http://scikit-learn.org/stable/modules/generated/sklearn.cross_validation.StratifiedShuffleSplit.html
+### using our testing script. 
 
-# Example starting point. Try investigating other evaluation techniques!
-from sklearn.cross_validation import train_test_split
-features_train, features_test, labels_train, labels_test = \
-    train_test_split(features, labels, test_size=0.3, random_state=42)
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import Imputer, RobustScaler
+from sklearn.model_selection import StratifiedShuffleSplit
+from sklearn.feature_selection import SelectPercentile, f_classif
+from sklearn.neighbors import KNeighborsClassifier
+import numpy as np
+
+#Suppress the warnings coming from GridSearchCV to reduce output messages
+import warnings
+import sklearn.exceptions
+
+warnings.filterwarnings("ignore",category=sklearn.exceptions.UndefinedMetricWarning)
+
+#Shuffled and stratified cross-validation binning for this tuning exercise
+cv_100 = StratifiedShuffleSplit(n_splits=100, test_size=0.1, random_state = 42)
+
+#Imputation using the median of each feature
+imp = Imputer(missing_values='NaN', strategy='median')
+
+#Feature Engineering with TopQuantile() to count the top quantile financial 
+	#features
+feats = ['salary', 'total_payments', 'bonus', 'total_stock_value', 'expenses', 
+         'exercised_stock_options', 'other', 'restricted_stock']
+
+#Since numpy needs the columns as integer positions instead of names...
+feats_loc_list = []
+for e in feats:
+    feats_loc_list.append(features.columns.get_loc(e))
+
+topQ = TopQuantile(feature_list = feats_loc_list)
+
+#Feature Scaling via RobustScaler()
+scaler = RobustScaler()
+
+#Feature Selection via SelectPercentile(f_classif, percentile = 75)
+selector = SelectPercentile(score_func = f_classif, percentile = 75)
+
+#FeatureUnion to keep track of kNN and SVM model results
+knn = KNeighborsClassifier()
+knn_param_grid = {'kNN__n_neighbors': range(1,21,1), 
+'kNN__weights': ['uniform', 'distance'], 'kNN__p': [1,2]}
+
+#Hyperparameter tuning
+#Apparently you're supposed to put the pipe in as a param for GridSearchCV, not the other way around...
+
+knn_pipe = Pipeline([('impute', imp), ('engineer',topQ), ('scale', scaler),
+                    ('select', selector), ('kNN', knn)])
+
+knn_gs = GridSearchCV(knn_pipe, knn_param_grid, scoring = ['precision', 'recall', 'f1'], 
+                      cv = cv_100, refit = 'f1', return_train_score = False)
+knn_gs.fit(features, labels)
+
+
+results_df_knn = pd.DataFrame(knn_gs.cv_results_)
+print results_df_knn.loc[knn_gs.best_index_]
+
+clf = knn_gs.best_estimator_
+
 
 ### Task 6: Dump your classifier, dataset, and features_list so anyone can
 ### check your results. You do not need to change anything below, but make sure
