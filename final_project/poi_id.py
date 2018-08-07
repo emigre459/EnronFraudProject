@@ -101,8 +101,6 @@ import numpy as np
 features = np.array(features)
 labels = np.array(labels)
 
-print features[2,:]
-
 
 #Suppress the warnings coming from GridSearchCV to reduce output messages
 import warnings
